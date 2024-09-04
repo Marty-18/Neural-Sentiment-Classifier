@@ -5,6 +5,8 @@ class TextClassifier(nn.Module):
   def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim):
         super(TextClassifier, self).__init__()
         self.hidden_dim = hidden_dim
+        self.vocab_size = vocab_size
+        self.embedding_dim = embedding_dim
         self.embedding = nn.Embedding(vocab_size, embedding_dim, sparse=False)
         self.fc1 = nn.Linear(embedding_dim, hidden_dim)
         self.act1 = nn.ReLU()#nn.Tanh()#nn.ReLU()
