@@ -1,7 +1,12 @@
 import pandas as pd
 import numpy as np
-from torch.utils.data import Dataset
 import nltk
+from nltk.corpus import stopwords
+from torch.utils.data import Dataset
+from torchtext.vocab import vocab
+from string import punctuation
+from collections import OrderedDict
+
          
 nltk.download('stopwords')      
 
@@ -10,13 +15,18 @@ class DataVocab:
     Create vocabulary to encode the whole dataset based on the training data to avoid data leaks. 
     """
     def __init__(self, train_data, tokenizer, vocab_size=10000, max_len=267):
-         self.vocab = create_vocab(count_vocab(train_data['review']))
-         
+        self.tokenizer = tokenizer
+        # create the vocabulary dictionary
+        dict_count = self.count_vocab(train_data)
+        # use the dictionary to make a mapping between integers and words, add special characters for padding and unknown words
+        self.vocab = vocab(dict_count, specials=["<pad>", "<unk>"]) 
+        # set the index of words not in the vocabulary to be equal to the <unk> index
+        self.vocab.set_default_index(vocabulary["<unk>"])
         
-        def count_vocab(self):
+        def count_vocab(self, data):
             dict_count = {}
-            for text in data_iter:
-                text = tokenizer(text)
+            for text in data:
+                text = self.tokenizer(text)
 
                 # remove stop words and punctuation
                 stop_words = set(stopwords.words('english'))
@@ -38,12 +48,7 @@ class DataVocab:
             # return only the top 10 000 words
             top_words = OrderedDict([w for w in sorted_count_dict[:10000]])
 
-            return top_words
-    
-
-        
-        def create_vocab:
-        
+            return top_words       
 
 
 class ClassifierTextDataset(Dataset):
