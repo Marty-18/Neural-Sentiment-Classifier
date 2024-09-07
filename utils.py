@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-def load_data(file):
+def load_process_data(file):
     """
     Load the raw CSV file, preprocess the data and split into train, tval, test. 
     
@@ -9,7 +9,7 @@ def load_data(file):
     Return: three splits of the data.
     """
     try:
-        data = pd.load_csv(file)
+        data = pd.read_csv(file)
     except FileNotFoundError:
         print(f'File named {file} not found. Please try a different file path or name.')
 
@@ -26,3 +26,5 @@ def load_data(file):
     print(f'Split the dataset into training, validation and testing split of length {len(train_data)}, {len(val_data)}, {len(test_data)}, respectively.')
     
     return train_data, val_data, test_data
+
+
