@@ -8,7 +8,11 @@ def load_data(file):
     Param: file name.
     Return: three splits of the data.
     """
-    data = pd.load_csv(file)
+    try:
+        data = pd.load_csv(file)
+    except FileNotFoundError:
+        print(f'File named {file} not found. Please try a different file path or name.')
+
      # get rid of duplicates in the data 
     data = data.drop_duplicates()
        
