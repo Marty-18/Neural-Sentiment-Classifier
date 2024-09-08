@@ -8,12 +8,13 @@ class Trainer():
        self.batch_size = batch_size
        self.lr = learning_rate
        self.num_epochs = num_epochs
-       self.optimizer = optimizer
-       self.scheduler = scheduler
-       self.loss = loss #do i need to instantiate all of these?
+       self.optimizer = optimizer #pick the right one so pass a string here?
+       self.scheduler = scheduler #same as optimier?
+       self.loss = loss #do i need to instantiate all of these? same as the two above?
        self.patience = 10 # number of consecutive epochs were val f1 score doesn't improve
        self.bad_epochs = 0 # counter to track epchs with no val f1 score improvement
        self.total_training_time = 0
+       
     def train_epoch():
         pass
 
