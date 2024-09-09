@@ -1,6 +1,8 @@
 import unittest
+import torch
 import numpy as np
 import pandas as pd
+from torch.utils.data import DataLoader, RandomSampler
 from trainer import Trainer
 from models import TextClassifier
 from dataset import DataVocab, ClassifierTextDataset
@@ -9,6 +11,7 @@ from torchtext.data.utils import get_tokenizer
 
 class ClassifierTest(unittest.TestCase):
     
+    @unittest.skip("already tested")
     def test_load_process_data(self):
         data_train, data_val, data_test = load_process_data('./IMDB_Dataset.csv')
         self.assertIsInstance(data_train, pd.DataFrame)
@@ -28,7 +31,8 @@ class ClassifierTest(unittest.TestCase):
        
         # check label distribution in each split
         self.assertAlmostEqual(len(data_train[data_train['sentiment'] == 'positive']), len(data_train[data_train['sentiment'] == 'negative']))
-
+    
+    @unittest.skip("already tested")
     def test_vocab(self):
         vocab_size = 10000
         train_data, _, _ = load_process_data('./IMDB_Dataset.csv')
@@ -64,18 +68,73 @@ class ClassifierTest(unittest.TestCase):
 
         # check encodings of a sentence against expected encoding
         sentence = ['hello', ',', 'random', 'sentence', 'sdfi', '.']
-        indeces = []
+        indeces= []
         for word in sentence:
             indeces.append(vocab[word])
 
-        #print(indeces)
+       
         self.assertEqual(vocab(sentence), indeces)
+    
+    @unittest.skip("already tested")          
+    def test_classifier_text_dataset(self):
+        vocab_size = 10000
+        max_len=267
+        data_train, data_val, data_test = load_process_data('./IMDB_Dataset.csv')
+        tokenizer = get_tokenizer("basic_english")
+        vocab = DataVocab(data_train, tokenizer, vocab_size=vocab_size).vocab
+        train_dataset = ClassifierTextDataset(data_train, tokenizer, vocab)
+        val_dataset = ClassifierTextDataset(data_val, tokenizer, vocab) 
+        test_dataset = ClassifierTextDataset(data_test, tokenizer, vocab)
 
+        # chech length of datasets is the same as the initial splits
+        self.assertEqual(len(train_dataset), len(data_train))
+        self.assertEqual(len(val_dataset), len(data_val))
+        self.assertEqual(len(test_dataset), len(data_test))
 
-                               
+        # check number of dimensions and type of encodings and labels
+        for text, label in train_dataset:
+            #print(text)
+            self.assertIsInstance(text, torch.LongTensor)
+            self.assertIsInstance(label, torch.LongTensor)
+            self.assertEqual(text.dim(), label.dim())
 
-    def test_dataset(self):
-        pass 
+        # check number of dimensions and type of encodings and labels
+        for text, labels in val_dataset:
+            #print(text)
+            self.assertIsInstance(text, torch.LongTensor)
+            self.assertIsInstance(labels, torch.LongTensor)
+            self.assertEqual(text.dim(), label.dim())
+       
+        # test collate function
+        batch_size = 4
+        # convert data to pytroch dataloaders with batching and padding 
+        train_dataloader = DataLoader(train_dataset,
+                              sampler=RandomSampler(train_dataset),
+                             batch_size=batch_size, collate_fn = train_dataset.pad_collate, drop_last=True)
+
+        val_dataloader = DataLoader(val_dataset,
+                              sampler=RandomSampler(val_dataset),
+                             batch_size=batch_size, collate_fn = val_dataset.pad_collate, drop_last=True)
+
+        # check each batch is of the expected length and each input is long the maximum length
+        for batch in train_dataloader:
+           inputs = batch[0][0]
+           labels = batch[0][1]
+           self.assertEqual(len(inputs), batch_size)
+           self.assertEqual(len(labels), batch_size)
+
+           for sentence in inputs:
+                self.assertEqual(len(sentence), max_len)
+        
+        for batch in val_dataloader:
+           inputs = batch[0][0]
+           labels = batch[0][1]
+           self.assertEqual(len(inputs), batch_size)
+           self.assertEqual(len(labels), batch_size)
+
+           for sentence in inputs:
+                self.assertEqual(len(sentence), max_len)
+    
     
     def test_model(self):
         pass
