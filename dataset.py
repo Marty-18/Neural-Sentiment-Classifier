@@ -27,12 +27,17 @@ class DataVocab:
         self.vocab.set_default_index(self.vocab["<unk>"])
         
     def count_vocab(self, data):
+        new_stopwords = ["films", "movie", "film", "movies"]
         dict_count = {}
         for text in data:
             text = self.tokenizer(text)
 
+            # load stopwords list and add custom stopwords
+            stop_words = stopwords.words('english')
+            stop_words.extend(new_stopwords)
+            stop_words = set(stop_words)
+           
             # remove stop words and punctuation
-            stop_words = set(stopwords.words('english'))
             filtered_text = [w for w in text if not w in stop_words and not w in punctuation]
             #print(filtered_text)
 
