@@ -5,6 +5,7 @@ from trainer import Trainer
 from models import TextClassifier
 from dataset import DataVocab, ClassifierTextDataset
 from utils import load_process_data
+from torchtext.data.utils import get_tokenizer
 
 class ClassifierTest(unittest.TestCase):
     
@@ -29,8 +30,49 @@ class ClassifierTest(unittest.TestCase):
         self.assertAlmostEqual(len(data_train[data_train['sentiment'] == 'positive']), len(data_train[data_train['sentiment'] == 'negative']))
 
     def test_vocab(self):
+        vocab_size = 10000
+        train_data, _, _ = load_process_data('./IMDB_Dataset.csv')
+        tokenizer = get_tokenizer("basic_english")
+        data_vocab = DataVocab(train_data, tokenizer, vocab_size=vocab_size)
+        count_dict = data_vocab.dict_count
+        #print(count_dict)
+        vocab = data_vocab.vocab
         
-        pass
+        # test dictionary count is of correct length
+        self.assertEqual(len(count_dict), vocab_size)
+
+        # check punctuation and stop words are not in dictionary
+        with self.assertRaises(KeyError):
+            count_dict['.']
+        with self.assertRaises(KeyError):
+            count_dict['the']
+        with self.assertRaises(KeyError):
+            count_dict['?']
+        with self.assertRaises(KeyError):
+            count_dict['movie']
+        with self.assertRaises(KeyError):
+            count_dict['this']
+
+
+        # test vocabulary is of correct length
+        self.assertEqual(len(vocab), vocab_size+2)
+
+        # test vocabulary indices for special tokens are correct
+        self.assertEqual(vocab['<pad>'], 0)
+        self.assertEqual(vocab['<unk>'], 1)
+        self.assertEqual(vocab.get_default_index(), vocab['<unk>'])
+
+        # check encodings of a sentence against expected encoding
+        sentence = ['hello', ',', 'random', 'sentence', 'sdfi', '.']
+        indeces = []
+        for word in sentence:
+            indeces.append(vocab[word])
+
+        #print(indeces)
+        self.assertEqual(vocab(sentence), indeces)
+
+
+                               
 
     def test_dataset(self):
         pass 
