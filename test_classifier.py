@@ -136,8 +136,28 @@ class ClassifierTest(unittest.TestCase):
                 self.assertEqual(len(sentence), max_len)
     
     
-    def test_model(self):
-        pass
+    def test_fc_model(self):
+        vocab_size = 10002
+        embedding_dim = 16
+        hidden_dim = 16
+        output_dim = 1
+        # expected mdoel architecture
+        model_architecture = ['embedding', 'fc1', 'act1', 'output_fc2', 'sig']
+        dim_per_layer = [vocab_size*embedding_dim, embedding_dim*hidden_dim, hidden_dim, hidden_dim*output_dim, output_dim]
+        # instantiate model
+        model = TextClassifier(vocab_size, embedding_dim, hidden_dim, output_dim)
+        model_params = [name for name, _ in model.named_children()]
+
+        # check model architecture is as expected
+        self.assertListEqual(model_params, model_architecture)
+                
+        # check dimensions per model parameter
+        for param, layer_dim in zip(model.parameters(), dim_per_layer):
+            self.assertEqual(param.nelement(), layer_dim)
+      
+
+       
+
 
     def trainer_test(self):
        # model = TextClassifier(vocab_size=10002, embedding_dim=16, hidden_dim=16, output_dim=1)
