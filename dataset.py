@@ -76,7 +76,7 @@ class ClassifierTextDataset(Dataset):
         for sentence, label in self.data.values:
           tokens = self.tokenizer(sentence)
           self.encodings.append(torch.tensor(self.vocab(tokens)).squeeze())
-          self.labels.append(torch.tensor(label).squeeze())
+          self.labels.append(torch.tensor([label]))
 
     def __len__(self):
         return len(self.data)
@@ -91,7 +91,11 @@ class ClassifierTextDataset(Dataset):
         text_list = []
         label_list = []
         for text, label in batch:
-            text_list.append(F.pad(text, pad=(0,self.max_len-len(text)), mode='constant', value=self.vocab.__getitem__('<pad>')))
+            print(type(label_list))
+            print(label_list)
+            print('text', type(text_list))
+            print(text_list)
+            text_list.append(F.pad(text, pad=(0,self.max_len-len(text)), mode='constant', value=self.vocab['<pad>']))
             label_list.append(label)
             label_list = torch.tensor(label_list)
             text_pad = torch.stack(text_list)
