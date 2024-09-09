@@ -97,8 +97,8 @@ class ClassifierTextDataset(Dataset):
             print(text_list)
             text_list.append(F.pad(text, pad=(0,self.max_len-len(text)), mode='constant', value=self.vocab['<pad>']))
             label_list.append(label)
-            label_list = torch.tensor(label_list)
-            text_pad = torch.stack(text_list)
+        label_list = torch.tensor(label_list)
+        text_pad = torch.stack(text_list)
 
         return [(text_pad.squeeze(), label_list)]
 
