@@ -20,12 +20,16 @@ def get_args():
     parser.add_argument('--data_file', default='IMDB_Dataset.csv', help='path to data directory')
     parser.add_argument('--batch-size', default=8, type=int, help='maximum number of datapoints in a batch')
     parser.add_argument('--vocab-size', default=10000, type=int, help='size of the model vocabulary')
+    parser.add_argument('--max_input_length', default=267, type=int, help='maximum length of each review')
+
 
    # parser.add_argument('--max-input-length', default=100, type=int, help='maximum length of data input sequence' )
    #parser.add_argument('--train-size', default=0.9, type=float, help='percentage of data for training split')
 
     # Model arguments 
     parser.add_argument('--model', default='TextClassifier', help='model name')
+    parser.add_argument('--embedding_dim', default=16, type=int, help='dimensions for emebdding layer')
+    parser.add_argument('--hidden_dim', default=16, type=int,  help='dimensions for hidden layers')
     
     # Optimization arguments
    # parser.add_argument('--warmup-steps', default=1e2, type=float, help='number of warm up steps for learing rate scheduler')
@@ -52,6 +56,7 @@ def get_args():
 
 
 def main():
+    output_dim = 1
     # load and preprocess data
     data_train, data_val, data_test = load_process_data(args.data_file)
 
@@ -60,9 +65,9 @@ def main():
     vocab = DataVocab(data_train, tokenizer, vocab_size=args.vocab_size).vocab
 
     # make dataset into custom dataset
-    train_dataset = ClassifierTextDataset(data_train, tokenizer, vocab)
-    val_dataset = ClassifierTextDataset(data_val, tokenizer, vocab) 
-    test_dataset = ClassifierTextDataset(data_test, tokenizer, vocab)
+    train_dataset = ClassifierTextDataset(data_train, tokenizer, vocab, args.max_input_length)
+    val_dataset = ClassifierTextDataset(data_val, tokenizer, vocab, args.max_input_length) 
+    test_dataset = ClassifierTextDataset(data_test, tokenizer, vocab, args.max_input_length)
     
     # preaprare data for training using torch dataloaders with batching and padding
     train_dataloader = DataLoader(train_dataset,
@@ -76,13 +81,13 @@ def main():
                               sampler=RandomSampler(test_dataset),
                              batch_size=args.batch_size, collate_fn = test_dataset.pad_collate(), drop_last=True)
     # instantiate model
-    model = TextClassifier(vocab_size, embedding_dim, hidden_dim, output_dim)
+    model = TextClassifier(args.vocab_size, args.embedding_dim, args.hidden_dim, output_dim)
 
     #optimizer
     #loss
     #scheduler
-    trainer = Trainer(args) #in right order
-    trainer.train()
+    #trainer = Trainer(model, train_data, val_data, batch_size, learning_rate, num_epochs, optimizer, scheduler, loss, output_dir, log_steps) #in right order
+    #trainer.train()
     #test as well?
 
 
