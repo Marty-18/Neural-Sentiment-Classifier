@@ -66,9 +66,17 @@ class ClassifierTextDataset(Dataset):
     def __init__(self, data, tokenizer, vocab, max_len=267): # vocab_size=10000, max_len=267):
         self.data = data
         #self.vocab_size = vocab_size
-        self.tokenizer = tokenizer
         self.vocab = vocab
+        self.tokenizer = tokenizer
         self.max_len = max_len
+        self.labels = []
+        self.encodings = []
+        
+        # Tokenize the data and convert to numerical representations using the vocabulary
+        for sentence, label in self.data.values:
+          tokens = self.tokenizer(sentence)
+          self.encodings.append(torch.tensor(self.vocab(tokens)).squeeze())
+          self.labels.append(torch.tensor(label).squeeze())
 
     def __len__(self):
         return len(self.data)
