@@ -128,14 +128,18 @@ class ClassifierTest(unittest.TestCase):
         
         for batch in val_dataloader:
            inputs = batch[0][0]
+          # print(type(inputs))
+          # print(inputs.shape)
            labels = batch[0][1]
+          # print('labels', type(labels))
+          # print(labels.shape)
            self.assertEqual(len(inputs), batch_size)
            self.assertEqual(len(labels), batch_size)
 
            for sentence in inputs:
                 self.assertEqual(len(sentence), max_len)
     
-    
+   # @unittest.skip("already tested")
     def test_fc_model(self):
         vocab_size = 10002
         embedding_dim = 16
@@ -154,9 +158,14 @@ class ClassifierTest(unittest.TestCase):
         # check dimensions per model parameter
         for param, layer_dim in zip(model.parameters(), dim_per_layer):
             self.assertEqual(param.nelement(), layer_dim)
-      
-
-       
+        
+        # test model prediction output is of correct shape
+        example_input = torch.ones([4, 267]).to(torch.int64)
+        expected_output = torch.ones([4])
+        outputs = model(example_input)
+        self.assertEqual(outputs.shape, expected_output.shape)
+        
+        
 
 
     def trainer_test(self):
