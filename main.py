@@ -1,5 +1,12 @@
 import argparse
+
+from torchtext.data.utils import get_tokenizer
+from torch.utils.data import DataLoader, RandomSampler
+
+from utils import load_process_data
+from dataset import DataVocab, ClassifierTextDataset
 from trainer import Trainer
+from models import TextClassifier
 
 def get_args():
     """
@@ -9,21 +16,23 @@ def get_args():
 
     parser = argparse.ArgumentParser('GPT2 Model fine-tuned on Austen dataset')
 
-    #Add arguments for data options
-    parser.add_argument('--data', default='IMDB_Dataset.csv', help='path to data directory')
+    # Add arguments for data 
+    parser.add_argument('--data_file', default='IMDB_Dataset.csv', help='path to data directory')
     parser.add_argument('--batch-size', default=8, type=int, help='maximum number of datapoints in a batch')
+    parser.add_argument('--vocab-size', default=10000, type=int, help='size of the model vocabulary')
+
    # parser.add_argument('--max-input-length', default=100, type=int, help='maximum length of data input sequence' )
    #parser.add_argument('--train-size', default=0.9, type=float, help='percentage of data for training split')
 
-    #Model arguments 
+    # Model arguments 
     parser.add_argument('--model', default='TextClassifier', help='model name')
     
-    #Optimization arguments
+    # Optimization arguments
    # parser.add_argument('--warmup-steps', default=1e2, type=float, help='number of warm up steps for learing rate scheduler')
   # eval every 250 steps  
-    parser.add_argument('--log-every', default=100, type=int, help='every number of steps after which training stats are shown.')
-    parser.add_argument('--epochs', default=4, type=int, help='train until specified epoch')
-    parser.add_argument('--lr', default=5e-4, type=float, help='learning rate')
+    parser.add_argument('--log-every', default=250, type=int, help='every number of steps after which training stats are shown.')
+    parser.add_argument('--epochs', default=30, type=int, help='train until specified epoch')
+    parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
    # parser.add_argument('--eps', default=1e-8, type=float, help='Adam’s epsilon for numerical stability')
 
     #Saving and loading checkpoint arguments
@@ -34,7 +43,7 @@ def get_args():
 
 
     #Save model arguments
-    parser.add_argument('--output-dir', default='GPT2_fine_tuned_Austen', help='path to save logs')
+    parser.add_argument('--output-dir', default='Sentiment_classifier_model', help='path to save logs')
 
     args = parser.parse_args()
     return args
@@ -43,8 +52,32 @@ def get_args():
 
 
 def main():
-    #load data
-    #load model
+    # load and preprocess data
+    data_train, data_val, data_test = load_process_data(args.data_file)
+
+    # load tokenizer
+    tokenizer = get_tokenizer("basic_english")
+    vocab = DataVocab(data_train, tokenizer, vocab_size=args.vocab_size).vocab
+
+    # make dataset into custom dataset
+    train_dataset = ClassifierTextDataset(data_train, tokenizer, vocab)
+    val_dataset = ClassifierTextDataset(data_val, tokenizer, vocab) 
+    test_dataset = ClassifierTextDataset(data_test, tokenizer, vocab)
+    
+    # preaprare data for training using torch dataloaders with batching and padding
+    train_dataloader = DataLoader(train_dataset,
+                              sampler=RandomSampler(train_dataset),
+                             batch_size=args.batch_size, collate_fn = train_dataset.pad_collate(), drop_last=True)
+
+    val_dataloader = DataLoader(val_dataset,
+                              sampler=RandomSampler(val_dataset),
+                             batch_size=args.batch_size, collate_fn = val_dataset.pad_collate(), drop_last=True)
+    test_dataloader = DataLoader(test_dataset,
+                              sampler=RandomSampler(test_dataset),
+                             batch_size=args.batch_size, collate_fn = test_dataset.pad_collate(), drop_last=True)
+    # instantiate model
+    model = TextClassifier(vocab_size, embedding_dim, hidden_dim, output_dim)
+
     #optimizer
     #loss
     #scheduler
