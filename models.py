@@ -12,7 +12,7 @@ class TextClassifier(nn.Module):
         self.act1 = nn.ReLU()#nn.Tanh()#nn.ReLU()
         #self.fc2 = nn.Linear(self.hidden_dim, hidden_dim)
         #self.act2 = nn.ReLU()
-        self.output = nn.Linear(hidden_dim, output_dim)
+        self.output_fc2 = nn.Linear(hidden_dim, output_dim)
         self.sig = nn.Sigmoid()
 
 
@@ -26,7 +26,7 @@ class TextClassifier(nn.Module):
      # print('h1 shape', h1.shape)
      # print('h2 shape', h2.shape)
 
-      out_sig = self.sig(self.output(h1))
+      out_sig = self.sig(self.output_fc2(h1))
     # print('out_sig shape', out_sig.shape)
 
       # reshape to be batch_size first
