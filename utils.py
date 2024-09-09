@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 
 def load_process_data(file):
     """
-    Load the raw CSV file, preprocess the data and split into train, tval, test. 
+    Load the raw CSV file, preprocess the data and split into train, eval, test. 
     
     Param: file name.
     Return: three splits of the data.
