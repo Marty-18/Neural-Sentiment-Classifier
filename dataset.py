@@ -14,13 +14,13 @@ nltk.download('stopwords')
 
 class DataVocab:
     """
-    Create vocabulary to encode the whole dataset based on only the training data to avoid data leaks from training to test. 
+    Create vocabulary to encode the whole dataset based on only the training data (without the labels) to avoid data leaks from training to test. 
     """
     def __init__(self, train_data, tokenizer, vocab_size=10000):
         self.tokenizer = tokenizer
         self.vocab_size = vocab_size
         # create the vocabulary dictionary
-        self.dict_count = self.count_vocab(train_data)
+        self.dict_count = self.count_vocab(train_data['review'])
         # use the dictionary to make a mapping between integers and words, add special characters for padding and unknown words
         self.vocab = vocab(self.dict_count, specials=["<pad>", "<unk>"]) 
         # set the index of words not in the vocabulary to be equal to the <unk> index
