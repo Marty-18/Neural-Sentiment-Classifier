@@ -2,12 +2,16 @@ import unittest
 import torch
 import numpy as np
 import pandas as pd
+
+from torch import nn
 from torch.utils.data import DataLoader, RandomSampler
 from trainer import Trainer
+
 from models import TextClassifier
 from dataset import DataVocab, ClassifierTextDataset
 from utils import load_process_data
 from torchtext.data.utils import get_tokenizer
+
 
 class ClassifierTest(unittest.TestCase):
     
@@ -139,7 +143,7 @@ class ClassifierTest(unittest.TestCase):
            for sentence in inputs:
                 self.assertEqual(len(sentence), max_len)
     
-   # @unittest.skip("already tested")
+    @unittest.skip("already tested")
     def test_fc_model(self):
         vocab_size = 10002
         embedding_dim = 16
@@ -165,17 +169,65 @@ class ClassifierTest(unittest.TestCase):
         outputs = model(example_input)
         self.assertEqual(outputs.shape, expected_output.shape)
         
+    def load_and_process_data(self):
+        vocab_size = 10000
+        max_len=267
+        data_train, data_val, data_test = load_process_data('./IMDB_Dataset.csv')
+        tokenizer = get_tokenizer("basic_english")
+        vocab = DataVocab(data_train, tokenizer, vocab_size=vocab_size).vocab
+        #taking only a small section of the training data for testing
+        data_train = data_train[:100]
         
+        # make dataset into custom dataset
+        train_dataset = ClassifierTextDataset(data_train, tokenizer, vocab)
+        val_dataset = ClassifierTextDataset(data_val, tokenizer, vocab) 
+        test_dataset = ClassifierTextDataset(data_test, tokenizer, vocab)
+
+        batch_size = 4
+        # convert data to pytroch dataloaders with batching and padding 
+        train_dataloader = DataLoader(train_dataset,
+                              sampler=RandomSampler(train_dataset),
+                             batch_size=batch_size, collate_fn = train_dataset.pad_collate, drop_last=True)
+
+        val_dataloader = DataLoader(val_dataset,
+                              sampler=RandomSampler(val_dataset),
+                             batch_size=batch_size, collate_fn = val_dataset.pad_collate, drop_last=True)
+        
+        return train_dataloader, val_dataloader
 
 
-    def trainer_test(self):
-       # model = TextClassifier(vocab_size=10002, embedding_dim=16, hidden_dim=16, output_dim=1)
-       # t = Trainer(model=model, train_data, val_data, batch_size, learning_rate, num_epochs, optimizer, scheduler, loss, output_dir, log_steps)
-      #  t.train()
-        pass
+
+    def test_trainer_train_epoch(self):
+        train_data, val_data = self.load_and_process_data()
+
+        lr = 1e-3
+        epochs = 3
+
+        model = TextClassifier(vocab_size=10002, embedding_dim=16, hidden_dim=16, output_dim=1)
+
+        # define loss function, optimizer and lr scheduler
+        criterion = nn.BCELoss() # binary cross entropy 
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+        scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, total_iters=epochs)
+
+        t = Trainer(model=model, train_dataloader =train_data, val_dataloader=val_data, batch_size=4, learning_rate=lr, num_epochs=epochs, optimizer=optimizer, scheduler=scheduler, loss=criterion, log_steps=200)
+        t.train()
+      #  Run a training step and compare the weight before and after to ensure that they are updated
+
+#Check that our loss function can be actually used on our data
+        #test shape of concatenated predictions matchesshape of labels , check dictionary is correct, check f1 score and accuracy scores and loss and time
+        #test training
+        #Run a training step and compare the weight before and after to ensure that they are updated
+        #Check that our loss function can be actually used on our data
+     
+
+    def test_trainer_eval_epoch(self):
+       #maybe includ ehtis in trainer or make one function per function in trainer?
+       # https://theaisummer.com/unit-test-deep-learning/
+       pass
+
+
 
 if __name__=='__main__':
     unittest.main()
   
-   # train_data = 
-   # trainer_test(model)
