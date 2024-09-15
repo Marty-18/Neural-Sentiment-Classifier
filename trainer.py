@@ -1,12 +1,12 @@
 import  torch
 import time
-import tqdm 
+from tqdm import tqdm
 from python_utils import format_time
 #from sklearn.metrics import f1_score
 from torcheval.metrics.functional import binary_f1_score
 
 class Trainer():
-    def __init__(self, model, train_data, val_data, batch_size, learning_rate, num_epochs, optimizer, scheduler, loss, log_steps, output_dir=None):
+    def __init__(self, model, train_data, val_data, batch_size, learning_rate, num_epochs, optimizer, scheduler, criterion, log_steps, output_dir=None):
        self.stats_dict = {'train_loss': [], 'train_acc': [], 'train_f1_score': [], 'train_time': [], 'val_loss': [], 'val_acc': [], 'val_f1_score': [], 'val_time': []}
        self.model = model
        self.log_steps = log_steps
@@ -16,8 +16,8 @@ class Trainer():
        self.lr = learning_rate
        self.num_epochs = num_epochs
        self.optimizer = optimizer #pick the right one so pass a string here?
-       self.scheduler = scheduler #same as optimizer?
-       self.loss = loss #do i need to instantiate all of these? same as the two above?
+       self.scheduler = scheduler 
+       self.criterion = criterion 
        self.patience = 10 # number of consecutive epochs were val f1 score doesn't improve
        self.bad_epochs = 0 # counter to track epchs with no val f1 score improvement
        self.total_training_time = 0
@@ -49,6 +49,7 @@ class Trainer():
             pred = torch.round(outputs)
 
             assert outputs.shape == labels.shape
+
             # calculate loss for this batch
             loss = self.criterion(outputs, labels.float())
             batch_loss = loss.item()
@@ -109,15 +110,21 @@ class Trainer():
 
     def train(self):
         best_f1_val = 0
-        patience = 10
-        bad_epochs = 0
-        total_elapsed = 0
         # log training params
         print(f'Training model: {self.model}, with learning rate: {self.lr}, batch size: {self.batch_size}, hidden dim: {self.model.hidden_dim}, embedding dim: {self.model.embedding_dim} for {self.num_epochs} epochs.')
 
         # main training loop
         for epoch in range(self.num_epochs):
-                
+            epoch_t0 = time.time()
+            epoch_train_loss, train_f1_score, train_time = self.train_epoch(epoch+1)
+           #### avg_val_loss, f1_val_score, val_time = evaluate(val_dataloader, epoch+1)
+            self.scheduler.step()
+            epoch_time = time.time()-epoch_t0
+            print(f"End of epoch {epoch+1}/{self.num_epochs}, Train Loss: {epoch_train_loss:.4f}, Train F1 Score: {train_f1_score}, Learning rate scheduler: {self.optimizer.param_groups[0]['lr']}.")
+            print(f"Epoch time: {format_time(epoch_time)}, Train time: {train_time}.")
+            #print(f"End of epoch {epoch+1}/{num_epochs}, Train Loss: {epoch_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Train F1 Score: {train_f1_score}, Val F1 Score: {f1_val_score:.4f}, Learning rate scheduler: {optimizer.param_groups[0]['lr']}.")
+            #print(f"Epoch time: {format_time(epoch_time)}, Train time: {train_time}, Validation time: {val_time}.")
+
 
 
     
