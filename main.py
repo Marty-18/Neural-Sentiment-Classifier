@@ -1,5 +1,7 @@
 import argparse
+import torch
 
+from torch import nn
 from torchtext.data.utils import get_tokenizer
 from torch.utils.data import DataLoader, RandomSampler
 
@@ -83,11 +85,13 @@ def main():
     # instantiate model
     model = TextClassifier(args.vocab_size, args.embedding_dim, args.hidden_dim, output_dim)
 
-    #optimizer
-    #loss
-    #scheduler
-    #trainer = Trainer(model, train_data, val_data, batch_size, learning_rate, num_epochs, optimizer, scheduler, loss, output_dir, log_steps) #in right order
-    #trainer.train()
+    # define loss function, optimizer and lr scheduler
+    criterion = nn.BCELoss() # binary cross entropy 
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, total_iters=args.epochs)
+    
+    trainer = Trainer(model, train_dataloader, val_dataloader, args.batch_size, args.lr, args.epochs, optimizer, scheduler, args.loss, args.output_dir, args.log_every) 
+    trainer.train()
     #test as well?
 
 
