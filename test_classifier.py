@@ -2,6 +2,7 @@ import unittest
 import torch
 import numpy as np
 import pandas as pd
+import copy
 
 from torch import nn
 from torch.utils.data import DataLoader, RandomSampler
@@ -175,8 +176,9 @@ class ClassifierTest(unittest.TestCase):
         data_train, data_val, data_test = load_process_data('./IMDB_Dataset.csv')
         tokenizer = get_tokenizer("basic_english")
         vocab = DataVocab(data_train, tokenizer, vocab_size=vocab_size).vocab
+
         #taking only a small section of the training data for testing
-        data_train = data_train[:100]
+        data_train = data_train[:1000]
         
         # make dataset into custom dataset
         train_dataset = ClassifierTextDataset(data_train, tokenizer, vocab)
@@ -202,19 +204,34 @@ class ClassifierTest(unittest.TestCase):
 
         lr = 1e-3
         epochs = 3
-
+        batch_size = 4
+        
+        torch.manual_seed(42)
         model = TextClassifier(vocab_size=10002, embedding_dim=16, hidden_dim=16, output_dim=1)
 
         # define loss function, optimizer and lr scheduler
         criterion = nn.BCELoss() # binary cross entropy 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, total_iters=epochs)
-
-        t = Trainer(model=model, train_dataloader =train_data, val_dataloader=val_data, batch_size=4, learning_rate=lr, num_epochs=epochs, optimizer=optimizer, scheduler=scheduler, loss=criterion, log_steps=200)
+        
+        t = Trainer(model=model, train_data =train_data, val_data=val_data, batch_size=batch_size, learning_rate=lr, num_epochs=epochs, optimizer=optimizer, scheduler=scheduler, criterion=criterion, log_steps=500)
+       
+        # compare model weigths before and after some training steps to make sure they are getting updated
+        model_copy = copy.deepcopy(model)
+        initial_weights = list(model_copy.parameters())
+        also_initial_weights = list(model_copy.parameters())
         t.train()
-      #  Run a training step and compare the weight before and after to ensure that they are updated
+        training_weights = list(t.model.parameters())
+        #print((initial_weights[-1] != training_weights[-1]).all())
+        self.assertListEqual(initial_weights, also_initial_weights)
+        for i, j in zip(initial_weights, training_weights):
+            self.assertFalse((i==j).all())
+     
 
-#Check that our loss function can be actually used on our data
+        # check accuracy and f1 score have different values
+        self.assertFalse(t.stats_dict['train_acc'] == t.stats_dict['train_f1_score'])
+       
+
         #test shape of concatenated predictions matchesshape of labels , check dictionary is correct, check f1 score and accuracy scores and loss and time
         #test training
         #Run a training step and compare the weight before and after to ensure that they are updated
