@@ -82,7 +82,8 @@ def main():
     test_dataloader = DataLoader(test_dataset,
                               sampler=RandomSampler(test_dataset),
                              batch_size=args.batch_size, collate_fn = test_dataset.pad_collate(), drop_last=True)
-    # instantiate model
+    # instantiate model and set manual seed
+    torch.manual_seed(42)
     model = TextClassifier(args.vocab_size, args.embedding_dim, args.hidden_dim, output_dim)
 
     # define loss function, optimizer and lr scheduler
@@ -90,8 +91,9 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, total_iters=args.epochs)
     
-    trainer = Trainer(model, train_dataloader, val_dataloader, args.batch_size, args.lr, args.epochs, optimizer, scheduler, args.loss, args.output_dir, args.log_every) 
+    trainer = Trainer(model, train_dataloader, val_dataloader, args.batch_size, args.lr, args.epochs, optimizer, scheduler, criterion=criterion, args.output_dir, args.log_every) 
     trainer.train()
+    trainer.stats_dict()
     #test as well?
 
 
