@@ -181,7 +181,7 @@ class Trainer():
                 bad_epochs = 0
             else:
                 bad_epochs += 1
-                print('BAD EPOCH!')
+               # print('BAD EPOCH!')
                # print(bad_epochs)
             if bad_epochs >= self.patience:
                 print(f'No validation set improvements observed for {bad_epochs} epochs. Stopping training early!')
