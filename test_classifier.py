@@ -231,18 +231,14 @@ class ClassifierTest(unittest.TestCase):
         # check accuracy and f1 score have different values
         self.assertFalse(t.stats_dict['train_acc'] == t.stats_dict['train_f1_score'])
        
-
-        #test shape of concatenated predictions matchesshape of labels , check dictionary is correct, check f1 score and accuracy scores and loss and time
-        #test training
-        #Run a training step and compare the weight before and after to ensure that they are updated
-        #Check that our loss function can be actually used on our data
      
 
     def test_trainer_eval_epoch(self):
-       #maybe includ ehtis in trainer or make one function per function in trainer?
-       # https://theaisummer.com/unit-test-deep-learning/
        pass
 
+    def test_early_stopping(self):
+        pass
+        
 
 
 if __name__=='__main__':
