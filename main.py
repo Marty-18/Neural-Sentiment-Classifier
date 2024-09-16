@@ -21,7 +21,7 @@ def get_args():
 
     # Add arguments for data 
     parser.add_argument('--data_file', default='IMDB_Dataset.csv', help='path to data directory')
-    parser.add_argument('--batch-size', default=8, type=int, help='maximum number of datapoints in a batch')
+    parser.add_argument('--batch-size', default=4, type=int, help='maximum number of datapoints in a batch')
     parser.add_argument('--vocab-size', default=10000, type=int, help='size of the model vocabulary')
     parser.add_argument('--max_input_length', default=267, type=int, help='maximum length of each review')
 
@@ -37,7 +37,7 @@ def get_args():
     # Optimization arguments
    # parser.add_argument('--warmup-steps', default=1e2, type=float, help='number of warm up steps for learing rate scheduler')
   # eval every 250 steps  
-    parser.add_argument('--log-every', default=250, type=int, help='every number of steps after which training stats are shown.')
+    parser.add_argument('--log-every', default=500, type=int, help='every number of steps after which training stats are shown.')
     parser.add_argument('--epochs', default=30, type=int, help='train until specified epoch')
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
    # parser.add_argument('--eps', default=1e-8, type=float, help='Adam’s epsilon for numerical stability')
@@ -75,14 +75,14 @@ def main(args):
     # preaprare data for training using torch dataloaders with batching and padding
     train_dataloader = DataLoader(train_dataset,
                               sampler=RandomSampler(train_dataset),
-                             batch_size=args.batch_size, collate_fn = train_dataset.pad_collate(), drop_last=True)
+                             batch_size=args.batch_size, collate_fn = train_dataset.pad_collate, drop_last=True)
 
     val_dataloader = DataLoader(val_dataset,
                               sampler=RandomSampler(val_dataset),
-                             batch_size=args.batch_size, collate_fn = val_dataset.pad_collate(), drop_last=True)
+                             batch_size=args.batch_size, collate_fn = val_dataset.pad_collate, drop_last=True)
     test_dataloader = DataLoader(test_dataset,
                               sampler=RandomSampler(test_dataset),
-                             batch_size=args.batch_size, collate_fn = test_dataset.pad_collate(), drop_last=True)
+                             batch_size=args.batch_size, collate_fn = test_dataset.pad_collate, drop_last=True)
     # instantiate model and set manual seed
     torch.manual_seed(42)
     model = TextClassifier(args.vocab_size, args.embedding_dim, args.hidden_dim, output_dim)
