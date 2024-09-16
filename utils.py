@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib as plt
 from sklearn.model_selection import train_test_split
 
 def load_process_data(file):
@@ -28,3 +29,17 @@ def load_process_data(file):
     return train_data, val_data, test_data
 
 
+def plot_metrics(stats_dict):
+    epochs = range(len(stats_dict['train_loss']))
+    measures = ['loss', 'accuracy', 'f1_score']
+
+    for measure in measures:
+        # blue dot line for training
+        plt.plot(epochs, stats_dict['train_'+measure], 'bo', label='Training '+measure.title())
+        # solid blue line for validation
+        plt.plot(epochs, stats_dict['val_'+measure], 'b', label='Validation '+measure.title())
+        plt.title('Training and Validation '+measure.title())
+        plt.xlabel('Epochs')
+        plt.ylabel(measure.title())
+        plt.legend()
+        plt.show()
