@@ -85,7 +85,7 @@ def main(args):
                              batch_size=args.batch_size, collate_fn = test_dataset.pad_collate, drop_last=True)
     # instantiate model and set manual seed
     torch.manual_seed(42)
-    model = TextClassifier(args.vocab_size, args.embedding_dim, args.hidden_dim, output_dim)
+    model = TextClassifier(len(vocab), args.embedding_dim, args.hidden_dim, output_dim)
 
     # define loss function, optimizer and lr scheduler
     criterion = nn.BCELoss() # binary cross entropy 
@@ -99,8 +99,8 @@ def main(args):
     print(f"In Epoch: {np.argmax(trainer.stats_dict['val_f1_score'])+1}.")
     print("Best validation loss:", min(trainer.stats_dict['val_loss']))
     print(f"In Epoch: {np.argmin(trainer.stats_dict['val_loss'])+1}.")
-    print('Best validation accuracy:', max(trainer.stats_dict['val_acc']))
-    print(f"In Epoch: {np.argmax(trainer.stats_dict['val_acc'])+1}.")
+    print('Best validation accuracy:', max(trainer.stats_dict['val_accuracy']))
+    print(f"In Epoch: {np.argmax(trainer.stats_dict['val_accuracy'])+1}.")
     plot_metrics(trainer.stats_dict)
     
     # cross validation
