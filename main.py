@@ -1,11 +1,12 @@
 import argparse
 import torch
+import numpy as np
 
 from torch import nn
 from torchtext.data.utils import get_tokenizer
 from torch.utils.data import DataLoader, RandomSampler
 
-from utils import load_process_data
+from utils import load_process_data, plot_metrics
 from dataset import DataVocab, ClassifierTextDataset
 from trainer import Trainer
 from models import TextClassifier
@@ -57,7 +58,7 @@ def get_args():
 
 
 
-def main():
+def main(args):
     output_dim = 1
     # load and preprocess data
     data_train, data_val, data_test = load_process_data(args.data_file)
@@ -91,12 +92,20 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, total_iters=args.epochs)
     
-    trainer = Trainer(model, train_dataloader, val_dataloader, args.batch_size, args.lr, args.epochs, optimizer, scheduler, criterion=criterion, args.output_dir, args.log_every) 
+    trainer = Trainer(model, train_dataloader, val_dataloader, args.batch_size, args.lr, args.epochs, optimizer, scheduler, criterion=criterion, log_steps=args.log_every, output_dir=args.output_dir) 
     trainer.train()
-    trainer.stats_dict()
-    #test as well?
 
+    print('Best validation f1 score:', max(trainer.stats_dict['val_f1_score']))
+    print(f"In Epoch: {np.argmax(trainer.stats_dict['val_f1_score'])+1}.")
+    print("Best validation loss:", min(trainer.stats_dict['val_loss']))
+    print(f"In Epoch: {np.argmin(trainer.stats_dict['val_loss'])+1}.")
+    print('Best validation accuracy:', max(trainer.stats_dict['val_acc']))
+    print(f"In Epoch: {np.argmax(trainer.stats_dict['val_acc'])+1}.")
+    plot_metrics(trainer.stats_dict)
+    
+    # cross validation
 
+    # evaluate on test set
 
 
 
