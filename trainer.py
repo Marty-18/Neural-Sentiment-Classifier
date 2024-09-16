@@ -7,7 +7,7 @@ from torcheval.metrics.functional import binary_f1_score
 
 class Trainer():
     def __init__(self, model, train_data, val_data, batch_size, learning_rate, num_epochs, optimizer, scheduler, criterion, log_steps, output_dir=None):
-       self.stats_dict = {'train_loss': [], 'train_acc': [], 'train_f1_score': [], 'train_time': [], 'val_loss': [], 'val_acc': [], 'val_f1_score': [], 'val_time': []}
+       self.stats_dict = {'train_loss': [], 'train_accuracy': [], 'train_f1_score': [], 'train_time': [], 'val_loss': [], 'val_accuracy': [], 'val_f1_score': [], 'val_time': []}
        self.model = model
        self.log_steps = log_steps
        self.train_data = train_data
@@ -32,7 +32,7 @@ class Trainer():
         all_preds = []
         
         # display progress
-        progress_bar = tqdm(self.train_data, desc=f'| Epoch {epoch}', leave=False, disable=False)
+        progress_bar = tqdm(self.train_data, desc=f'| Epoch {epoch}', leave=True, disable=False)
 
         # iterate over the training set
         for step, batch in enumerate(progress_bar):
@@ -93,7 +93,7 @@ class Trainer():
         average_train_loss =  total_train_loss/total_train_samples
 
         # update the stats dictionary
-        self.stats_dict['train_acc'].append(train_acc)
+        self.stats_dict['train_accuracy'].append(train_acc)
         self.stats_dict['train_f1_score'].append(train_f1_score)
         self.stats_dict['train_time'].append(final_elapsed)
         self.stats_dict['train_loss'].append(average_train_loss)
@@ -139,7 +139,7 @@ class Trainer():
         print(f'Val accuracy: {val_acc:.4f}')
   
         # f1 score
-        val_f1_score = binary_f1_score(all_labels, all_preds, average='weighted') #y_true, y_pred
+        val_f1_score = binary_f1_score(all_preds, all_labels) #y_true, y_pred
  
         # validation loss
         average_val_loss =  total_val_loss/total_val_samples
@@ -148,7 +148,7 @@ class Trainer():
 
 
         # update the stats dictionary
-        self.stats_dict['val_acc'].append(val_acc)
+        self.stats_dict['val_accuracy'].append(val_acc)
         self.stats_dict['val_f1_score'].append(val_f1_score)
         self.stats_dict['val_time'].append(final_elapsed)
         self.stats_dict['val_loss'].append(average_val_loss)
@@ -174,7 +174,7 @@ class Trainer():
             epoch_time = time.time()-epoch_t0
             print(f"End of epoch {epoch+1}/{self.num_epochs}, Train Loss: {epoch_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Train F1 Score: {train_f1_score}, Val F1 Score: {f1_val_score:.4f}, Learning rate scheduler: {self.optimizer.param_groups[0]['lr']}.")
             print(f"Epoch time: {format_time(epoch_time)}, Train time: {train_time}, Validation time: {val_time}.")
-            total_elapsed_train += epoch_time
+            self.total_training_time += epoch_time
             # early stopping
             if f1_val_score > best_f1_val:
                 best_f1_val = f1_val_score
@@ -188,6 +188,6 @@ class Trainer():
                 break
 
         print('FINISHED TRAINING SUCCESSFULLY!')
-        print(f'Total time took for training: {format_time(total_elapsed_train)}')
+        print(f'Total time took for training: {format_time(self.total_training_time)}')
 
     
