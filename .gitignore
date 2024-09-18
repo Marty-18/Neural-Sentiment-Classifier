@@ -163,3 +163,4 @@ cython_debug/
 
 # Other
 IMDB_Dataset.csv
+.DS_Store
