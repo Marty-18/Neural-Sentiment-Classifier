@@ -17,17 +17,13 @@ def get_args():
 
     """
 
-    parser = argparse.ArgumentParser('GPT2 Model fine-tuned on Austen dataset')
+    parser = argparse.ArgumentParser('Binary Neural Sentiment Classifier')
 
     # Add arguments for data 
     parser.add_argument('--data_file', default='IMDB_Dataset.csv', help='path to data directory')
     parser.add_argument('--batch-size', default=4, type=int, help='maximum number of datapoints in a batch')
     parser.add_argument('--vocab-size', default=10000, type=int, help='size of the model vocabulary')
     parser.add_argument('--max_input_length', default=267, type=int, help='maximum length of each review')
-
-
-   # parser.add_argument('--max-input-length', default=100, type=int, help='maximum length of data input sequence' )
-   #parser.add_argument('--train-size', default=0.9, type=float, help='percentage of data for training split')
 
     # Model arguments 
     parser.add_argument('--model', default='TextClassifier', help='model name')
@@ -36,7 +32,6 @@ def get_args():
     
     # Optimization arguments
    # parser.add_argument('--warmup-steps', default=1e2, type=float, help='number of warm up steps for learing rate scheduler')
-  # eval every 250 steps  
     parser.add_argument('--log-every', default=500, type=int, help='every number of steps after which training stats are shown.')
     parser.add_argument('--epochs', default=30, type=int, help='train until specified epoch')
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
