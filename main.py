@@ -101,6 +101,7 @@ def main(args):
     # cross validation
 
     # evaluate on test set
+    trainer.test(test_dataloader)
 
 
 
