@@ -79,7 +79,7 @@ class Trainer():
         
         # accuracy
         train_acc = (torch.sum(all_labels == all_preds))/total_train_samples
-        print(f'Train accuracy for this epoch: {train_acc:.4f}')
+        #print(f'Train accuracy for this epoch: {train_acc:.4f}')
 
         # f1 score
         #train_f1_score = f1_score(all_labels, all_preds, average='weighted') ground_truth, preds
@@ -98,9 +98,9 @@ class Trainer():
         self.stats_dict['train_time'].append(final_elapsed)
         self.stats_dict['train_loss'].append(average_train_loss)
 
-        return average_train_loss , train_f1_score, final_elapsed
+        return average_train_loss , train_f1_score, train_acc, final_elapsed
 
-    def eval_epoch(self, epoch):
+    def eval_epoch(self, data, epoch=None):
         # model in evaluation mode
         self.model.eval()
         total_val_loss = 0
@@ -110,7 +110,11 @@ class Trainer():
         all_preds = []
        
         # display progress
-        progress_bar_eval = tqdm(self.val_data, desc=f'| Epoch validation {epoch}', leave=True, disable=False)
+        if epoch:
+            progress_bar_eval = tqdm(data, desc=f'| Epoch validation {epoch}', leave=True, disable=False)
+        else:
+            progress_bar_eval = tqdm(data, desc=f'| Evaluation on the test set', leave=True, disable=False)
+
         
         with torch.no_grad():
             for step, batch in enumerate(progress_bar_eval):
@@ -136,7 +140,7 @@ class Trainer():
 
         # accuracy
         val_acc = (torch.sum(all_labels == all_preds))/total_val_samples
-        print(f'Val accuracy: {val_acc:.4f}')
+        #print(f'Val accuracy: {val_acc:.4f}')
   
         # f1 score
         val_f1_score = binary_f1_score(all_preds, all_labels) #y_true, y_pred
@@ -147,13 +151,14 @@ class Trainer():
         final_elapsed = format_time(time.time()-t0)
 
 
-        # update the stats dictionary
-        self.stats_dict['val_accuracy'].append(val_acc)
-        self.stats_dict['val_f1_score'].append(val_f1_score)
-        self.stats_dict['val_time'].append(final_elapsed)
-        self.stats_dict['val_loss'].append(average_val_loss)
+        # update the stats dictionary if in validation epoch
+        if epoch:
+            self.stats_dict['val_accuracy'].append(val_acc)
+            self.stats_dict['val_f1_score'].append(val_f1_score)
+            self.stats_dict['val_time'].append(final_elapsed)
+            self.stats_dict['val_loss'].append(average_val_loss)
 
-        return average_val_loss, val_f1_score, final_elapsed
+        return average_val_loss, val_f1_score, val_acc, final_elapsed
 
     def save_model(self):
         "not implemented"
@@ -161,15 +166,15 @@ class Trainer():
         pass
 
     def train(self):
-        best_f1_val = 0
+        best_f1_val = 0 #dictionrary with key f1 score and value epoch number? how do i save the best model? make a deep copy of the best model every epohc?
         # log training params
         print(f'Training model: {self.model}, with learning rate: {self.lr}, batch size: {self.batch_size}, hidden dim: {self.model.hidden_dim}, embedding dim: {self.model.embedding_dim} for {self.num_epochs} epochs.')
 
         # main training loop
         for epoch in range(self.num_epochs):
             epoch_t0 = time.time()
-            epoch_train_loss, train_f1_score, train_time = self.train_epoch(epoch+1)
-            avg_val_loss, f1_val_score, val_time = self.eval_epoch(epoch+1)
+            epoch_train_loss, train_f1_score, _, train_time = self.train_epoch(epoch+1)
+            avg_val_loss, f1_val_score, _, val_time = self.eval_epoch(self.val_data, epoch+1)
             self.scheduler.step()
             epoch_time = time.time()-epoch_t0
             print(f"End of epoch {epoch+1}/{self.num_epochs}, Train Loss: {epoch_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Train F1 Score: {train_f1_score}, Val F1 Score: {f1_val_score:.4f}, Learning rate scheduler: {self.optimizer.param_groups[0]['lr']}.")
@@ -189,5 +194,9 @@ class Trainer():
 
         print('FINISHED TRAINING SUCCESSFULLY!')
         print(f'Total time took for training: {format_time(self.total_training_time)}')
+        
+    def test(self, test_data):
+        avg_test_loss, f1_test_score, test_acc, test_time = self.eval_epoch(test_data)
 
+        print(f'Test set F1 Score: {f1_test_score}, accuracy: {test_acc}, time take to run: {test_time}.')
     
